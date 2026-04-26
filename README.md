@@ -45,25 +45,26 @@ Let the skill analyze the change and recommend the right path. It handles resume
 
 ### sdd:fast (Direct Fast Path)
 
-Phases: **Specify → Isolate → Execute (TDD) → Verify → Finish + Archive**
+Phases: **Isolate → Specify → Execute (TDD) → Verify → Finish + Archive**
 
 Skip path selection when you already know the change is small. Can escalate to Full Path mid-flight if scope grows.
 
 ### sdd:full (Direct Full Path)
 
-Phases: **Specify → Brainstorm → Isolate → Plan → Execute (Subagents + TDD) → Verify → Finish + Archive**
+Phases: **Isolate → Specify → Brainstorm → Plan → Execute (Subagents + TDD) → Verify → Finish + Archive**
 
 Skip path selection when you already know the change is complex. Includes design brainstorming, detailed planning, and subagent-driven execution with two-stage review.
 
 ## How It Works
 
-1. **Specify** — Create a change proposal with OpenSpec (`/opsx:propose`)
-2. **Brainstorm** *(Full Path)* — Socratic design refinement via `superpowers:brainstorming`
-3. **Isolate** — Work on a dedicated branch or git worktree
-4. **Plan** *(Full Path)* — Detailed, executable task breakdown via `superpowers:writing-plans`
-5. **Execute** — TDD implementation, one task at a time
-6. **Verify** — Full test suite + evidence-based verification + spec compliance (`/opsx:verify`)
-7. **Finish + Archive** — Integrate code + archive knowledge (`/opsx:archive`)
+1. **Choose change name** — Confirm a kebab-case change name that will be used for both the OpenSpec change directory and the isolated workspace name
+2. **Isolate** — Create or enter a dedicated branch or git worktree named `sdd/<change-name>`
+3. **Specify** — Create a change proposal with OpenSpec inside the isolated workspace (`/opsx:propose`)
+4. **Brainstorm** *(Full Path)* — Socratic design refinement via `superpowers:brainstorming`
+5. **Plan** *(Full Path)* — Detailed, executable task breakdown via `superpowers:writing-plans`
+6. **Execute** — TDD implementation, one task at a time
+7. **Verify** — Full test suite + evidence-based verification + spec compliance (`/opsx:verify`)
+8. **Finish + Archive** — Integrate code + archive knowledge (`/opsx:archive`)
 
 ## License
 

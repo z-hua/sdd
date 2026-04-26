@@ -21,6 +21,8 @@ This file is read by all three SDD skills (go, fast, full). It contains the shar
 
 When creating a branch or worktree for a change, use the pattern `sdd/<change-name>` where `<change-name>` matches the OpenSpec change directory name exactly. This enables resume detection: scan `git worktree list` and `git branch` for `sdd/<change-name>` to find an existing workspace for a change.
 
+Collect or confirm the kebab-case `change-name` before isolation so the workspace can be created first and `/opsx:propose` can later generate the matching OpenSpec change directory inside that isolated workspace.
+
 ## Unified Output Directory
 
 **All artifacts live in the OpenSpec change directory.** No documents should be written to `docs/superpowers/specs/` or `docs/superpowers/plans/`. When invoking Superpowers skills, override their default output paths:
@@ -53,6 +55,8 @@ These are non-negotiable. Both paths enforce all five:
 3. **Root cause before fix** — No fixes without systematic investigation. Random changes create new bugs.
 4. **Evidence before claims** — No "should work" or "probably passes." Run the command, read the output, show the proof.
 5. **Archive preserves knowledge** — Every completed change merges specs and preserves full context for future reference.
+
+**Clarification:** Creating or entering an isolated workspace before writing the spec is allowed and encouraged. The prohibition is against writing implementation code before the spec/proposal exists, not against doing isolation setup first.
 
 If you catch yourself thinking "just this once" or "it's too simple to need specs" — **STOP. The iron laws apply especially when you think they don't.** The TDD exemption above is narrow — if the change affects runtime behavior in any way, TDD is required.
 

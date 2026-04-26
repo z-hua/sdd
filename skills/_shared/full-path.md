@@ -5,9 +5,22 @@ This path adds brainstorming, detailed planning, and subagent-driven execution w
 
 ---
 
+## Isolate
+
+**REQUIRED SUB-SKILL:** Use `superpowers:using-git-worktrees`
+
+- Confirm or collect a kebab-case `change-name` before creating the workspace
+- Create an isolated worktree with branch `sdd/<change-name>`
+- Auto-detect and run project setup
+- Verify clean baseline (all tests pass, 0 failures) before starting implementation
+
+**Gate:** Isolated workspace ready before running `/opsx:propose`.
+
+---
+
 ## Specify
 
-Create the initial specification scaffold.
+Create the initial specification scaffold inside the isolated workspace.
 
 **REQUIRED:** Run `/opsx:propose` with the change description.
 
@@ -78,18 +91,6 @@ Refine the task list into a detailed, executable implementation plan.
 **HARD GATE:** Plan must pass self-review AND user approval before execution begins.
 
 > **Execution choice:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
-
----
-
-## Isolate
-
-**REQUIRED SUB-SKILL:** Use `superpowers:using-git-worktrees`
-
-- Creates isolated worktree with new branch
-- Auto-detects and runs project setup
-- Verifies clean baseline (all tests pass, 0 failures)
-
-**Gate:** Isolated workspace ready with passing tests.
 
 ---
 

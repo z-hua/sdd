@@ -10,9 +10,25 @@ Use this path when the change is well-understood and has ≤5 tasks.
 
 ---
 
+## Isolate
+
+Never work directly on main/master.
+
+**RECOMMENDED:** Use `superpowers:using-git-worktrees` for full isolation with a worktree.
+
+**Alternative:** Create a branch named `sdd/<change-name>` and work there directly. This is acceptable for Fast Path changes where worktree overhead is disproportionate to the change size.
+
+Before creating the workspace, confirm or collect a kebab-case `change-name`. Use the isolated branch or worktree name `sdd/<change-name>` so resume detection can find it later.
+
+- Either way, verify clean baseline (all tests pass) before starting implementation
+
+**Gate:** Working on a dedicated branch (worktree or regular) before running `/opsx:propose`.
+
+---
+
 ## Specify
 
-Create the specification before writing any code.
+Create the specification inside the isolated workspace before writing any code.
 
 **REQUIRED:** Run `/opsx:propose` with the change description.
 
@@ -22,24 +38,10 @@ Create the specification before writing any code.
 
 ### Scope Check
 
-Count the tasks in `tasks.md` immediately after `/opsx:propose` generates it:
+Count the tasks in `tasks.md` immediately after `/opsx:propose` generates it in the isolated workspace:
 
 - **≤5 tasks** → continue on Fast Path
 - **>5 tasks** → STOP and announce: "Scope exceeds Fast Path limits (~N tasks). Recommending switch to Full Path." Update `sdd_path` to `full` in `.openspec.yaml` before switching. All artifacts carry over. Read the `full-path.md` file in this same directory and resume at Brainstorm or Plan as appropriate.
-
----
-
-## Isolate
-
-Never work directly on main/master.
-
-**RECOMMENDED:** Use `superpowers:using-git-worktrees` for full isolation with a worktree.
-
-**Alternative:** Create a branch named `sdd/<change-name>` and work there directly. This is acceptable for Fast Path changes where worktree overhead is disproportionate to the change size.
-
-- Either way, verify clean baseline (all tests pass) before starting
-
-**Gate:** Working on a dedicated branch (worktree or regular) with passing baseline tests.
 
 ---
 

@@ -45,6 +45,7 @@ After prerequisites pass, detect whether to resume or start fresh:
 1. **Scan** `openspec/changes/` for non-archived change directories (exclude `archive/`)
 2. **If active change(s) found** → list them, ask user which to resume (or start new)
 3. **If no active change** → proceed to Path Selection for a new change
+4. **If the user already isolated a change but `/opsx:propose` has not run yet** → ask for the `change-name`, enter the existing `sdd/<change-name>` workspace, and resume at **Specify**
 
 ### Resuming an Active Change
 
@@ -54,10 +55,10 @@ After prerequisites pass, detect whether to resume or start fresh:
 
 | Condition | Resume at | Action |
 |-----------|-----------|--------|
-| `proposal.md` missing or empty | Specify | Run `/opsx:propose` |
+| No workspace detected (no worktree or branch for `sdd/<change-name>`) | Isolate | Run `superpowers:using-git-worktrees` (Full Path) or create branch `sdd/<change-name>` (Fast Path) |
+| `proposal.md` missing or empty | Specify | Run `/opsx:propose` in the isolated workspace |
 | `design.md` empty/missing AND path is Full | Brainstorm | Run `superpowers:brainstorming` |
 | `tasks.md` has only high-level tasks (no bite-sized steps) AND path is Full | Plan | Run `superpowers:writing-plans` |
-| No workspace detected (no worktree or branch for `sdd/<change-name>`) | Isolate | Run `superpowers:using-git-worktrees` (Full Path) or create branch `sdd/<change-name>` (Fast Path) |
 | `tasks.md` has unchecked tasks (`- [ ]`) | Execute | Resume from first unchecked task |
 | All tasks checked (`- [x]`) | Verify | Run verification |
 | Verified but not archived | Finish + Archive | Run `superpowers:finishing-a-development-branch` then `/opsx:archive` |
@@ -84,7 +85,7 @@ Enter the worktree if one exists, or checkout the existing branch (`git checkout
 
 Present recommendation to user with a brief scope summary (e.g., "~3 tasks, focused change to one module" or "~8 tasks across 4 subsystems — recommending Full Path"). User can always override.
 
-**Persist the choice:** After `/opsx:propose` creates the change directory, write `sdd_path: fast` or `sdd_path: full` into the change's `.openspec.yaml` based on the user's confirmed choice. This enables deterministic resume — no heuristic guessing needed.
+**Persist the choice:** After the user confirms the path, ask them to provide or confirm a kebab-case `change-name`. Create and enter the isolated `sdd/<change-name>` branch or worktree first. Then run `/opsx:propose` inside that isolated workspace. After `.openspec.yaml` exists, write `sdd_path: fast` or `sdd_path: full` based on the user's confirmed choice. This keeps resume deterministic while ensuring all OpenSpec artifacts are created inside the isolated workspace.
 
 ## Execute Selected Path
 

@@ -1,6 +1,6 @@
 ---
 name: fast
-description: Use for well-understood, small changes (≤5 tasks) — skips path selection and directly executes the SDD Fast Path (specify, isolate, TDD execute, verify, archive)
+description: Use for well-understood, small changes (≤5 tasks) — skips path selection and directly executes the SDD Fast Path (isolate, specify, TDD execute, verify, archive)
 ---
 
 # SDD — Fast Path (Direct)
@@ -45,6 +45,7 @@ After prerequisites pass, detect whether to resume or start fresh:
 1. **Scan** `openspec/changes/` for non-archived change directories (exclude `archive/`) that have `sdd_path: fast` in `.openspec.yaml`
 2. **If active fast-path change(s) found** → list them, ask user which to resume (or start new)
 3. **If no active fast-path change** → proceed to start a new change
+4. **If the user already isolated a change but `/opsx:propose` has not run yet** → ask for the `change-name`, enter the existing `sdd/<change-name>` workspace, and resume at **Specify**
 
 ### Resuming an Active Change
 
@@ -52,8 +53,8 @@ After prerequisites pass, detect whether to resume or start fresh:
 
 | Condition | Resume at | Action |
 |-----------|-----------|--------|
-| `proposal.md` missing or empty | Specify | Run `/opsx:propose` |
 | No workspace detected (no worktree or branch for `sdd/<change-name>`) | Isolate | Create branch `sdd/<change-name>` or use `superpowers:using-git-worktrees` |
+| `proposal.md` missing or empty | Specify | Run `/opsx:propose` in the isolated workspace |
 | `tasks.md` has unchecked tasks (`- [ ]`) | Execute | Resume from first unchecked task |
 | All tasks checked (`- [x]`) | Verify | Run verification |
 | Verified but not archived | Finish + Archive | Run `superpowers:finishing-a-development-branch` then `/opsx:archive` |
@@ -66,8 +67,13 @@ Enter the worktree if one exists, or checkout the existing branch if only a bran
 
 ## New Change
 
-For a new change, set `sdd_path: fast` in the change's `.openspec.yaml` after `/opsx:propose` creates it.
+For a new change:
+
+1. Ask the user to provide or confirm a kebab-case `change-name`
+2. Create and enter a dedicated branch or worktree named `sdd/<change-name>`
+3. Run `/opsx:propose` inside that isolated workspace
+4. After `/opsx:propose` creates `.openspec.yaml`, set `sdd_path: fast`
 
 ## Execute
 
-**REQUIRED:** Read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` and follow all phases (Specify → Isolate → Execute → Verify + Finish).
+**REQUIRED:** Read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` and follow all phases (**Isolate → Specify → Execute → Verify + Finish**).
