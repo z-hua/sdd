@@ -35,8 +35,6 @@ Create the initial specification scaffold inside the isolated workspace.
 
 ## Brainstorm
 
-**Arriving from a Fast Path scope escalation?** The existing `proposal.md` and `specs/*.md` carry over — proceed directly into brainstorming without re-running `/opsx:propose`.
-
 Refine the proposal through structured design discussion.
 
 **REQUIRED SUB-SKILL:** Use `superpowers:brainstorming`
@@ -90,15 +88,13 @@ Refine the task list into a detailed, executable implementation plan.
 
 **HARD GATE:** Plan must pass self-review AND user approval before execution begins.
 
-> **Execution choice:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task.
+> **Next phase:** **REQUIRED SUB-SKILL:** Use `superpowers:subagent-driven-development` to implement this plan.
 
 ---
 
 ## Execute
 
-Execute the plan with quality enforcement at every task.
-
-### Recommended: Subagent-Driven Development
+Execute the plan with quality enforcement at every task. Full Path changes span multiple subsystems — subagent isolation prevents context pollution across tasks and enforces independent verification of each unit of work.
 
 **REQUIRED SUB-SKILL:** Use `superpowers:subagent-driven-development`
 
@@ -112,14 +108,6 @@ Per task:
 4. **Code quality review** — subagent checks patterns, tests, maintainability
 5. **Fix issues** → re-review until both stages pass
 6. **Mark task complete** in tasks.md
-
-### Alternative: Inline Execution
-
-**REQUIRED SUB-SKILL:** Use `superpowers:executing-plans`
-
-- Single-session execution with checkpoints
-- Follow plan steps exactly, verify each
-- No subagent isolation (higher context pollution risk)
 
 ### During Execution
 

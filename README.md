@@ -28,7 +28,8 @@ This plugin requires two companion systems:
 ## Install
 
 ```
-/plugin install https://github.com/z-hua/sdd
+/plugin marketplace add z-hua/sdd
+/plugin install sdd@sdd-dev
 ```
 
 ## Skills
@@ -39,6 +40,8 @@ This plugin requires two companion systems:
 | **fast** | `/sdd:fast` | Directly use Fast Path — small, well-understood changes (≤5 tasks) |
 | **full** | `/sdd:full` | Directly use Full Path — complex, multi-subsystem changes |
 
+Every skill starts with **language selection** (English, 简体中文, or other) and a **prerequisites check** before any work begins.
+
 ### sdd:go (Auto-Select)
 
 Let the skill analyze the change and recommend the right path. It handles resume detection for both paths.
@@ -47,7 +50,10 @@ Let the skill analyze the change and recommend the right path. It handles resume
 
 Phases: **Isolate → Specify → Execute (TDD) → Verify → Finish + Archive**
 
-Skip path selection when you already know the change is small. Can escalate to Full Path mid-flight if scope grows.
+Skip path selection when you already know the change is small. Supports two execution modes:
+
+- **Inline (default)** — direct TDD in the current session
+- **Subagent-driven (optional)** — per-task delegation with review
 
 ### sdd:full (Direct Full Path)
 
@@ -57,14 +63,22 @@ Skip path selection when you already know the change is complex. Includes design
 
 ## How It Works
 
-1. **Choose change name** — Confirm a kebab-case change name that will be used for both the OpenSpec change directory and the isolated workspace name
-2. **Isolate** — Create or enter a dedicated branch or git worktree named `sdd/<change-name>`
-3. **Specify** — Create a change proposal with OpenSpec inside the isolated workspace (`/opsx:propose`)
-4. **Brainstorm** *(Full Path)* — Socratic design refinement via `superpowers:brainstorming`
-5. **Plan** *(Full Path)* — Detailed, executable task breakdown via `superpowers:writing-plans`
-6. **Execute** — TDD implementation, one task at a time
-7. **Verify** — Full test suite + evidence-based verification + spec compliance (`/opsx:verify`)
-8. **Finish + Archive** — Integrate code + archive knowledge (`/opsx:archive`)
+1. **Language selection** — Choose the language for all communication and generated documents
+2. **Prerequisites check** — Verify OpenSpec and Superpowers are both available
+3. **Choose change name** — Confirm a kebab-case change name for the OpenSpec change directory and workspace
+4. **Isolate** — Create or enter a dedicated workspace (Full Path: worktree required; Fast Path: branch or worktree)
+5. **Specify** — Create a change proposal with OpenSpec (`/opsx:propose`)
+6. **Brainstorm** *(Full Path)* — Socratic design refinement via `superpowers:brainstorming`
+7. **Plan** *(Full Path)* — Detailed, executable task breakdown via `superpowers:writing-plans`
+8. **Execute** — TDD implementation via `superpowers:subagent-driven-development` or inline
+9. **Verify** — Full test suite + evidence-based verification + spec compliance (`/opsx:verify`)
+10. **Finish + Archive** — Integrate code + archive knowledge (`/opsx:archive`)
+
+## Breaking Changes (v1.1)
+
+- **`superpowers:executing-plans` removed.** Full Path now requires `superpowers:subagent-driven-development` for execution (no inline alternative). Fast Path offers both inline and subagent modes.
+- **Fast→Full in-place switching removed.** Scope exceeding ≤5 tasks now produces a warning. If the user chooses to switch, all Fast Path artifacts are rolled back (git reset, change directory removed, workspace deleted) and the user restarts with `/sdd:full`. No artifact carry-over between paths.
+- **Full Path requires worktree isolation.** Previously worktree was recommended; now it is mandatory for Full Path changes.
 
 ## License
 

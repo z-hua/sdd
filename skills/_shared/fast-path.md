@@ -2,27 +2,20 @@
 
 Use this path when the change is well-understood and has ≤5 tasks.
 
-**If scope exceeds limits at any point** (>5 tasks discovered):
-- STOP and announce the scope change to user
-- Update `sdd_path` to `full` in the change's `.openspec.yaml`
-- All artifacts in `openspec/changes/<name>/` carry over — nothing is lost
-- Read the `full-path.md` file in this same directory and resume at the Brainstorm or Plan phase as appropriate
-
 ---
 
 ## Isolate
 
 Never work directly on main/master.
 
-**RECOMMENDED:** Use `superpowers:using-git-worktrees` for full isolation with a worktree.
+Confirm or collect a kebab-case `change-name` first so resume detection can find it later. Then ask the user which isolation method to use:
 
-**Alternative:** Create a branch named `sdd/<change-name>` and work there directly. This is acceptable for Fast Path changes where worktree overhead is disproportionate to the change size.
+- **Branch (default):** Create a branch named `sdd/<change-name>` and check it out
+- **Worktree (optional):** Use `superpowers:using-git-worktrees` to create an isolated worktree with branch `sdd/<change-name>`
 
-Before creating the workspace, confirm or collect a kebab-case `change-name`. Use the isolated branch or worktree name `sdd/<change-name>` so resume detection can find it later.
+Verify clean baseline (all tests pass) before starting implementation.
 
-- Either way, verify clean baseline (all tests pass) before starting implementation
-
-**Gate:** Working on a dedicated branch (worktree or regular) before running `/opsx:propose`.
+**Gate:** Working on a dedicated `sdd/<change-name>` workspace (branch or worktree) before running `/opsx:propose`.
 
 ---
 
@@ -38,16 +31,28 @@ Create the specification inside the isolated workspace before writing any code.
 
 ### Scope Check
 
-Count the tasks in `tasks.md` immediately after `/opsx:propose` generates it in the isolated workspace:
+Count the tasks in `tasks.md` immediately after `/opsx:propose` generates it. If >5 tasks are discovered, warn the user: "This change has ~N tasks, which exceeds the Fast Path threshold (≤5). Recommend switching to `sdd:full` — Fast Path skips brainstorming and detailed planning, which increases the risk of integration issues and rework for changes of this size."
 
-- **≤5 tasks** → continue on Fast Path
-- **>5 tasks** → STOP and announce: "Scope exceeds Fast Path limits (~N tasks). Recommending switch to Full Path." Update `sdd_path` to `full` in `.openspec.yaml` before switching. All artifacts carry over. Read the `full-path.md` file in this same directory and resume at Brainstorm or Plan as appropriate.
+**If the user chooses to switch to Full Path:**
+
+Fast Path artifacts are not compatible with Full Path (no brainstorming or detailed planning was done), so a clean restart is required:
+
+1. Roll back all changes: `git reset --hard` to the commit before isolation began
+2. Remove the OpenSpec change directory: `rm -rf openspec/changes/<change-name>/`
+3. Return to the main branch: if in a worktree, exit it first; otherwise `git checkout main` (or `master`)
+4. Remove the workspace: delete the `sdd/<change-name>` branch (`git branch -D`) or worktree (`git worktree remove`)
+5. Tell the user: "Workspace cleaned up. Run `/sdd:full` to restart this change on the Full Path."
+6. **END. Do NOT continue.**
+
+**If the user chooses to continue on Fast Path:** Record `sdd_scope_override: true` in `.openspec.yaml` to document the decision, then proceed.
 
 ---
 
 ## Execute
 
-Work through tasks.md one task at a time.
+Work through tasks.md one task at a time. Check `.openspec.yaml` for `sdd_execution_mode`. If present, use it. If absent, ask the user which execution mode to use and persist the choice as `sdd_execution_mode: inline` or `sdd_execution_mode: subagent` in `.openspec.yaml`:
+
+### Mode A — Inline Execution (default)
 
 **REQUIRED SUB-SKILL:** `superpowers:test-driven-development`
 
@@ -61,6 +66,22 @@ For each task:
 6. **Commit** — One commit per task with descriptive message
 7. **Mark complete** — Check off the task in tasks.md
 
+### Mode B — Subagent-Driven Execution (optional)
+
+**REQUIRED SUB-SKILL:** `superpowers:subagent-driven-development`
+
+Tasks are executed sequentially — each subagent completes and its changes are committed before the next is dispatched.
+
+Per task:
+
+1. **Dispatch implementer subagent** — fresh context, no pollution from prior tasks. Subagents must read the current working tree to discover artifacts produced by prior tasks; do not rely solely on the plan's code blocks.
+2. **Implementer implements with TDD** — follows `superpowers:test-driven-development`
+3. **Review** — subagent verifies code matches spec and checks quality
+4. **Fix issues** → re-review until passing
+5. **Mark task complete** in tasks.md
+
+### During Execution (both modes)
+
 **If a bug is encountered or a test won't pass:**
 
 - **REQUIRED SUB-SKILL:** Use `superpowers:systematic-debugging`
@@ -72,6 +93,12 @@ For each task:
 
 - Stop and update the spec first
 - Then continue implementation
+
+**If task count grows significantly** (new tasks added during execution push total well beyond 5):
+
+- STOP and warn the user: "Task count has grown to ~N, well beyond the Fast Path threshold (≤5). Fast Path skips brainstorming and detailed planning — continuing without them increases the risk of integration issues and rework. Recommend switching to Full Path."
+- **If the user chooses to switch:** Roll back all changes (`git reset --hard` to the commit before isolation), remove `openspec/changes/<change-name>/`, return to the main branch (exit worktree or `git checkout main`/`master`), then remove the `sdd/<change-name>` branch (`git branch -D`) or worktree (`git worktree remove`). Tell the user: "Workspace cleaned up. Run `/sdd:full` to restart this change on the Full Path." **END. Do NOT continue.**
+- **If the user chooses to continue on Fast Path:** Record `sdd_scope_override: true` in `.openspec.yaml` to document the decision, then proceed.
 
 ---
 

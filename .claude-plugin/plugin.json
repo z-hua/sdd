@@ -1,9 +1,9 @@
 {
   "name": "sdd",
   "description": "Spec-Driven Development: specs before code, TDD enforcement, systematic verification, and knowledge archival for every code change",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
-    "name": "z-hua"
+    "name": "z.hua"
   },
   "homepage": "https://github.com/z-hua/sdd",
   "repository": "https://github.com/z-hua/sdd",

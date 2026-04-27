@@ -1,21 +1,45 @@
 # SDD — Shared Rules and Context
 
-This file is read by all three SDD skills (go, fast, full). It contains the shared prerequisites, conventions, and enforcement rules.
+This file is read at the start of every SDD skill, before any project files are touched.
 
-## Prerequisites Check
+## Language Selection
 
-**Note:** The primary prerequisites gate is enforced inline in each SKILL.md (go, fast, full) before this file is read. The checks below serve as a reference and fallback.
+**This is the first step.** Ask the user which language to use for all subsequent communication and generated documents (proposals, specs, design docs, task lists, commit messages, etc.). Present the options:
 
-**Check 1 — OpenSpec:** Run `ls openspec/ 2>/dev/null && which openspec 2>/dev/null` to check for both the `openspec/` directory and the `openspec` CLI.
+- **English**
+- **简体中文**
+- **Other** (let user specify)
+
+Use the chosen language consistently throughout the entire workflow. This includes announcements, questions, gate messages, failure reports, and all files written to `openspec/changes/`.
+
+## Prerequisites Check — HARD GATE
+
+**After language selection is complete, you MUST pass these checks before doing ANYTHING else. If either check fails, STOP IMMEDIATELY — do not read any other files, do not start any work.**
+
+**Check 1 — OpenSpec:** Run two checks independently:
+
+- **Directory:** `ls openspec/ 2>/dev/null` — does the `openspec/` directory exist?
+- **CLI:** `which openspec 2>/dev/null` — is the `openspec` CLI on PATH?
+
+Both are required. If only one is present, give a targeted message:
+
+- Directory exists but CLI missing → "Found `openspec/` directory but `openspec` CLI is not in PATH. Run `npm install -g openspec` or check your PATH."
+- CLI exists but directory missing → "Found `openspec` CLI but no `openspec/` directory. Run `npx openspec init` to initialize."
+- Neither exists → Show the full installation instructions (see Results below).
 
 **Check 2 — Superpowers:** Look at your available skills list (the skills listed in the system prompt for this session). If any `superpowers:*` skills appear (e.g., `superpowers:using-superpowers`, `superpowers:test-driven-development`, etc.), Superpowers is available. If NO `superpowers:*` skills appear in your available skills list, Superpowers is NOT installed for this project. Do NOT attempt to verify by reading internal files like `installed_plugins.json` — the only reliable check is whether the skills are actually loaded in your current session.
 
-**HARD GATE — Both systems are required.** OpenSpec manages the WHAT (specs, proposals, archival); Superpowers enforces the HOW (TDD, reviews, verification). Without both, the spec-then-implement-then-verify loop cannot close — running with only one would silently skip critical quality gates.
+Both systems are required. OpenSpec manages the WHAT (specs, proposals, archival); Superpowers enforces the HOW (TDD, reviews, verification). Without both, the spec-then-implement-then-verify loop cannot close — running with only one would silently skip critical quality gates.
 
-- **Both available** → "Full SDD mode — specs + quality enforcement." Proceed.
-- **OpenSpec missing** → STOP. Tell user: "SDD requires OpenSpec for spec management (proposals, delta specs, archival). Install with: `npx openspec init` then run `openspec update` to generate skills. See https://github.com/allaboutai/OpenSpec" Do NOT proceed.
-- **Superpowers missing** → STOP. Tell user: "SDD requires Superpowers for quality enforcement (TDD, systematic debugging, verification, code review). Install with: `/plugin install superpowers@claude-plugins-official` in Claude Code. See https://github.com/obra/superpowers" Do NOT proceed.
-- **Neither available** → STOP. Tell user both installation instructions above. Do NOT proceed.
+**Check 3 — OpenSpec skills:** Look at your available skills list for the three required OpenSpec skills: `opsx:propose`, `opsx:verify`, `opsx:archive`. All three must be present. If any are missing, tell the user which ones are missing and instruct: "Run `openspec update` to generate the missing OpenSpec skills." — then **END. Do NOT continue.**
+
+**Results:**
+
+- **All checks pass** → Announce "Full SDD mode — specs + quality enforcement." and continue.
+- **OpenSpec missing (partially or fully)** → STOP. Show the targeted message from Check 1 above (directory-only, CLI-only, or neither). If neither exists, also show the full installation reference: "Install with: `npx openspec init` then run `openspec update` to generate skills. See https://github.com/allaboutai/OpenSpec" — then **END. Do NOT continue.**
+- **OpenSpec skills missing** → STOP. List the missing skills (e.g., "`opsx:verify` not found"). Tell user: "Run `openspec update` to generate the missing OpenSpec skills." — then **END. Do NOT continue.**
+- **Superpowers missing** → STOP. Tell user: "SDD requires Superpowers for quality enforcement (TDD, systematic debugging, verification, code review). Install with: `/plugin install superpowers@claude-plugins-official` in Claude Code. See https://github.com/obra/superpowers" — then **END. Do NOT continue.**
+- **Multiple checks fail** → STOP. Show all relevant installation instructions above — then **END. Do NOT continue.**
 
 ## Branch Naming Convention
 
@@ -33,7 +57,7 @@ openspec/changes/<change-name>/
 ├── specs/*.md            ← Specify: /opsx:propose generates (delta specs)
 ├── design.md             ← Brainstorm: superpowers:brainstorming writes HERE (not docs/superpowers/specs/)
 ├── tasks.md              ← Plan: superpowers:writing-plans writes HERE (not docs/superpowers/plans/)
-└── .openspec.yaml        ← OpenSpec metadata (includes sdd_path: fast|full)
+└── .openspec.yaml        ← OpenSpec metadata (sdd_path: fast|full, sdd_execution_mode: inline|subagent, sdd_scope_override: true if user overrode scope warning)
 ```
 
 **Override rules for Superpowers skills:**
@@ -74,16 +98,9 @@ If you catch yourself thinking "just this once" or "it's too simple to need spec
 - Do NOT work around test failures with skips or mocks
 
 **User wants to abandon a change mid-way:**
-- If in a worktree: use `superpowers:finishing-a-development-branch` → choose "Discard work"
+- Use `superpowers:finishing-a-development-branch` → choose "Discard work" (handles both branches and worktrees)
 - The OpenSpec change directory remains in `openspec/changes/` — user can delete manually or resume later
 - Do NOT run `/opsx:archive` on incomplete work
-
-**Fast Path scope exceeds limits (>5 tasks discovered mid-execution):**
-- STOP and announce: "Scope exceeds Fast Path limits. Recommending switch to Full Path."
-- Update `sdd_path` to `full` in the change's `.openspec.yaml`
-- All existing artifacts in `openspec/changes/<name>/` carry over — nothing is lost
-- Resume at the appropriate Full Path phase (usually Brainstorm or Plan)
-- Read the `full-path.md` file in this same `_shared/` directory and continue from there
 
 **OpenSpec command failures (`/opsx:*`):**
 - `/opsx:propose` fails → Common causes: invalid change name (must be kebab-case), schema not found, directory already exists. Check the error message, fix, and retry.
@@ -111,17 +128,16 @@ If you catch yourself thinking "just this once" or "it's too simple to need spec
 
 **Superpowers skills** (invoked via `superpowers:*` skill references):
 
-- `superpowers:using-git-worktrees` — Isolated development workspace
+- `superpowers:using-git-worktrees` — Isolated development workspace (Full Path: required, Fast Path: optional)
 - `superpowers:test-driven-development` — RED-GREEN-REFACTOR cycle
+- `superpowers:subagent-driven-development` — Per-task delegation with two-stage review (Full Path: required, Fast Path: optional)
 - `superpowers:verification-before-completion` — Evidence-based validation
 - `superpowers:finishing-a-development-branch` — Merge/PR workflow
-- `superpowers:executing-plans` — Inline single-session execution with checkpoints
 
-**Full path additionally requires:**
+**Full Path additionally requires:**
 
 - `superpowers:brainstorming` — Socratic design refinement
 - `superpowers:writing-plans` — Detailed implementation planning
-- `superpowers:subagent-driven-development` — Per-task delegation with two-stage review
 
 **When debugging:**
 

@@ -1,0 +1,12 @@
+{
+  "name": "sdd-dev",
+  "owner": {
+    "name": "z.hua"
+  },
+  "plugins": [
+    {
+      "name": "sdd",
+      "source": "./"
+    }
+  ]
+}

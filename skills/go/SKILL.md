@@ -9,43 +9,18 @@ Unify OpenSpec (WHAT to build) with Superpowers (HOW to build). This skill autom
 
 **Announce at start:** "I'm using sdd:go to orchestrate this change."
 
-## Language Selection
+## Setup — FIRST STEP
 
-**This is the first step.** Ask the user which language to use for all subsequent communication and generated documents (proposals, specs, design docs, task lists, commit messages, etc.). Present the options:
-
-- **English**
-- **简体中文**
-- **Other** (let user specify)
-
-Use the chosen language consistently throughout the entire workflow. This includes announcements, questions, gate messages, failure reports, and all files written to `openspec/changes/`.
-
-## Prerequisites Check — HARD GATE
-
-**You MUST complete these checks before doing ANYTHING else after language selection. If either check fails, STOP IMMEDIATELY — do not read any other files, do not start any work.**
-
-**Check 1 — OpenSpec:** Run `ls openspec/ 2>/dev/null && which openspec 2>/dev/null` to check for both the `openspec/` directory and the `openspec` CLI.
-
-**Check 2 — Superpowers:** Look at your available skills list (the skills listed in the system prompt for this session). If any `superpowers:*` skills appear (e.g., `superpowers:using-superpowers`, `superpowers:test-driven-development`, etc.), Superpowers is available. If NO `superpowers:*` skills appear in your available skills list, Superpowers is NOT installed for this project. Do NOT attempt to verify by reading internal files like `installed_plugins.json` — the only reliable check is whether the skills are actually loaded in your current session.
-
-**Results:**
-
-- **Both available** → Announce "Full SDD mode — specs + quality enforcement." and continue.
-- **OpenSpec missing** → STOP. Tell user: "SDD requires OpenSpec for spec management (proposals, delta specs, archival). Install with: `npx openspec init` then run `openspec update` to generate skills. See https://github.com/allaboutai/OpenSpec" — then **END. Do NOT continue.**
-- **Superpowers missing** → STOP. Tell user: "SDD requires Superpowers for quality enforcement (TDD, systematic debugging, verification, code review). Install with: `/plugin install superpowers@claude-plugins-official` in Claude Code. See https://github.com/obra/superpowers" — then **END. Do NOT continue.**
-- **Neither available** → STOP. Show both installation instructions above — then **END. Do NOT continue.**
-
-## Load Shared Rules
-
-**REQUIRED:** Read `${CLAUDE_SKILL_DIR}/../_shared/common.md` and apply all rules (prerequisites, iron laws, failure handling, etc.) before proceeding.
+**REQUIRED:** Read `${CLAUDE_SKILL_DIR}/../_shared/common.md` now. Follow the **Language Selection** and **Prerequisites Check** sections in that file before continuing. If prerequisites fail, STOP — do not proceed. Apply all rules (iron laws, failure handling, etc.) from that file throughout this workflow.
 
 ## Resume or Start
 
 After prerequisites pass, detect whether to resume or start fresh:
 
-1. **Scan** `openspec/changes/` for non-archived change directories (exclude `archive/`)
-2. **If active change(s) found** → list them, ask user which to resume (or start new)
-3. **If no active change** → proceed to Path Selection for a new change
-4. **If the user already isolated a change but `/opsx:propose` has not run yet** → ask for the `change-name`, enter the existing `sdd/<change-name>` workspace, and resume at **Specify**
+1. **Scan `openspec/changes/`** for non-archived change directories (exclude `archive/`) — these are "in-progress" changes
+2. **Scan git** for `sdd/*` branches (`git branch --list 'sdd/*'`) and worktrees (`git worktree list`) that have **no** corresponding `openspec/changes/<name>/` directory — these are "isolated but not yet specified" changes. Note: branches matching `sdd/*` that were not created by SDD may appear; always confirm with the user before resuming.
+3. **Present findings:** list in-progress changes and isolated-but-not-specified changes separately; ask user which to resume, or start a new change
+4. **If no changes at all** → proceed to Path Selection for a new change
 
 ### Resuming an Active Change
 
@@ -55,7 +30,9 @@ After prerequisites pass, detect whether to resume or start fresh:
 
 | Condition | Resume at | Action |
 |-----------|-----------|--------|
-| No workspace detected (no worktree or branch for `sdd/<change-name>`) | Isolate | Run `superpowers:using-git-worktrees` (Full Path) or create branch `sdd/<change-name>` (Fast Path) |
+| Neither worktree nor branch exists for `sdd/<change-name>` | Isolate | Full Path: use `superpowers:using-git-worktrees` (required). Fast Path: branch or worktree (ask user) |
+| Branch `sdd/<change-name>` exists but no worktree (Full Path) | Isolate | Prompt: "Found branch but no worktree. Full Path requires worktree isolation. Creating a worktree from the existing branch." Use `superpowers:using-git-worktrees` to create a worktree based on the existing branch |
+| Branch `sdd/<change-name>` exists but no worktree (Fast Path) | — | Checkout the existing branch (`git checkout sdd/<change-name>`) and resume from the next matching condition below |
 | `proposal.md` missing or empty | Specify | Run `/opsx:propose` in the isolated workspace |
 | `design.md` empty/missing AND path is Full | Brainstorm | Run `superpowers:brainstorming` |
 | `tasks.md` has only high-level tasks (no bite-sized steps) AND path is Full | Plan | Run `superpowers:writing-plans` |
@@ -67,7 +44,7 @@ After prerequisites pass, detect whether to resume or start fresh:
 
 **Announce:** "Resuming change `<name>` at <phase name>."
 
-Enter the worktree if one exists, or checkout the existing branch (`git checkout sdd/<change-name>`) if only a branch was found. Then continue from the detected phase — read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` or `${CLAUDE_SKILL_DIR}/../_shared/full-path.md` as appropriate.
+Enter the worktree if one exists. If only a branch is detected, follow the path-specific action in the table above. Then continue from the detected phase — read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` or `${CLAUDE_SKILL_DIR}/../_shared/full-path.md` as appropriate.
 
 ## Path Selection (New Change)
 
@@ -85,9 +62,14 @@ Enter the worktree if one exists, or checkout the existing branch (`git checkout
 
 Present recommendation to user with a brief scope summary (e.g., "~3 tasks, focused change to one module" or "~8 tasks across 4 subsystems — recommending Full Path"). User can always override.
 
-**Persist the choice:** After the user confirms the path, ask them to provide or confirm a kebab-case `change-name`. Create and enter the isolated `sdd/<change-name>` branch or worktree first. Then run `/opsx:propose` inside that isolated workspace. After `.openspec.yaml` exists, write `sdd_path: fast` or `sdd_path: full` based on the user's confirmed choice. This keeps resume deterministic while ensuring all OpenSpec artifacts are created inside the isolated workspace.
+**Persist the choice:** After the user confirms the path, ask them to provide or confirm a kebab-case `change-name`. Isolate the workspace:
+
+- **Full Path:** Use `superpowers:using-git-worktrees` to create a worktree with branch `sdd/<change-name>` (required)
+- **Fast Path:** Ask user: branch (default) or worktree? Create the chosen workspace with branch `sdd/<change-name>`
+
+Then run `/opsx:propose` inside that isolated workspace. After `.openspec.yaml` exists, write `sdd_path: fast` or `sdd_path: full` based on the user's confirmed choice. This keeps resume deterministic while ensuring all OpenSpec artifacts are created inside the isolated workspace.
 
 ## Execute Selected Path
 
-- **Fast Path** → Read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` and follow all phases.
-- **Full Path** → Read `${CLAUDE_SKILL_DIR}/../_shared/full-path.md` and follow all phases.
+- **Fast Path** → Read `${CLAUDE_SKILL_DIR}/../_shared/fast-path.md` and continue from the current phase — skip phases whose gates are already satisfied.
+- **Full Path** → Read `${CLAUDE_SKILL_DIR}/../_shared/full-path.md` and continue from the current phase — skip phases whose gates are already satisfied.
